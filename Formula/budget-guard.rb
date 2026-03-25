@@ -1,3 +1,10 @@
+# Homebrew formula for Budget Guard.
+# Tap: dalex160/budget-guard
+# Install: brew tap dalex160/budget-guard && brew install budget-guard
+#
+# SwiftBar runs plugins from ~/Library/Application Support/SwiftBar/Plugins/.
+# Homebrew's sandbox prevents writing there during post_install, so we ship
+# a "budget-guard-link" helper that the user runs once after install.
 class BudgetGuard < Formula
   desc "SwiftBar plugin showing Claude Max usage in the macOS menu bar"
   homepage "https://github.com/dalex160/claude-budget-watch"
@@ -11,13 +18,13 @@ class BudgetGuard < Formula
   def install
     bin.install "budget-guard.2m.sh"
 
-    # Install a helper script that links the plugin into SwiftBar
+    # Resolve bin path at runtime so the symlink survives prefix changes
     (bin/"budget-guard-link").write <<~SH
       #!/bin/bash
       set -euo pipefail
       PLUGINS_DIR="$HOME/Library/Application Support/SwiftBar/Plugins"
       mkdir -p "$PLUGINS_DIR"
-      ln -sf "#{bin}/budget-guard.2m.sh" "$PLUGINS_DIR/budget-guard.2m.sh"
+      ln -sf "$(brew --prefix)/bin/budget-guard.2m.sh" "$PLUGINS_DIR/budget-guard.2m.sh"
       echo "Linked budget-guard into SwiftBar plugins directory."
       if ! pgrep -x SwiftBar >/dev/null 2>&1; then
         echo "Starting SwiftBar..."
@@ -26,7 +33,7 @@ class BudgetGuard < Formula
         echo "SwiftBar is running. The plugin will appear on next refresh."
       fi
     SH
-    chmod 0755, bin/"budget-guard-link"
+    (bin/"budget-guard-link").chmod 0755
   end
 
   def caveats
@@ -48,6 +55,7 @@ class BudgetGuard < Formula
   end
 
   test do
-    assert_match "Budget Guard", shell_output("head -10 #{bin}/budget-guard.2m.sh")
+    assert_predicate bin/"budget-guard.2m.sh", :executable?
+    assert_match "#!/bin/bash", (bin/"budget-guard.2m.sh").read.lines.first
   end
 end
