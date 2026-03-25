@@ -10,26 +10,35 @@ class BudgetGuard < Formula
 
   def install
     bin.install "budget-guard.2m.sh"
-  end
 
-  def post_install
-    plugins_dir = Pathname.new("#{Dir.home}/Library/Application Support/SwiftBar/Plugins")
-    plugins_dir.mkpath
-    target = plugins_dir/"budget-guard.2m.sh"
-    target.unlink if target.exist? || target.symlink?
-    target.make_symlink(bin/"budget-guard.2m.sh")
+    # Install a helper script that links the plugin into SwiftBar
+    (bin/"budget-guard-link").write <<~SH
+      #!/bin/bash
+      set -euo pipefail
+      PLUGINS_DIR="$HOME/Library/Application Support/SwiftBar/Plugins"
+      mkdir -p "$PLUGINS_DIR"
+      ln -sf "#{bin}/budget-guard.2m.sh" "$PLUGINS_DIR/budget-guard.2m.sh"
+      echo "Linked budget-guard into SwiftBar plugins directory."
+      if ! pgrep -x SwiftBar >/dev/null 2>&1; then
+        echo "Starting SwiftBar..."
+        open -a SwiftBar 2>/dev/null || echo "SwiftBar not found. Install it: brew install --cask swiftbar"
+      else
+        echo "SwiftBar is running. The plugin will appear on next refresh."
+      fi
+    SH
+    chmod 0755, bin/"budget-guard-link"
   end
 
   def caveats
     <<~EOS
-      Budget Guard has been installed and linked into SwiftBar's plugin directory.
+      To complete setup, run:
+        budget-guard-link
+
+      This links the plugin into SwiftBar's plugin directory and starts SwiftBar.
 
       Prerequisites:
         - SwiftBar must be installed: brew install --cask swiftbar
         - Claude Code must have been authenticated at least once (OAuth token in Keychain)
-
-      Start SwiftBar if it's not already running:
-        open -a SwiftBar
 
       To enable debug logging:
         export BUDGET_GUARD_DEBUG=1
