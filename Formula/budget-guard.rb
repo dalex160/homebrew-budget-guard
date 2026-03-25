@@ -7,7 +7,6 @@ class BudgetGuard < Formula
 
   depends_on :macos
   depends_on "python@3"
-  depends_on cask: "swiftbar"
 
   def install
     bin.install "budget-guard.2m.sh"
@@ -26,8 +25,8 @@ class BudgetGuard < Formula
       Budget Guard has been installed and linked into SwiftBar's plugin directory.
 
       Prerequisites:
+        - SwiftBar must be installed: brew install --cask swiftbar
         - Claude Code must have been authenticated at least once (OAuth token in Keychain)
-        - SwiftBar must be running
 
       Start SwiftBar if it's not already running:
         open -a SwiftBar
