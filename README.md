@@ -6,6 +6,7 @@
 
 ```bash
 brew tap dalex160/budget-guard
+brew trust dalex160/budget-guard
 brew install budget-guard
 ```
 
